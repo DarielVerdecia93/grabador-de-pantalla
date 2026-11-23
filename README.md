@@ -1,4 +1,4 @@
-# Gravador de Tela
+# Grabador de Pantalla
 
 Grabador de pantalla para Windows, ligero y rápido, **acelerado por GPU**.
 
@@ -41,7 +41,7 @@ Textura D3D11 ──► copia a memoria ──► stdin de FFmpeg ──► enco
 Audio del sistema ──► WASAPI loopback ──► named pipe ──► FFmpeg (AAC) ───────────────── ┘
 ```
 
-El video se guarda como `Gravacao_AAAAMMDD_HHMMSS.mp4` en la carpeta elegida
+El video se guarda como `Grabacion_AAAAMMDD_HHMMSS.mp4` en la carpeta elegida
 (por defecto, la carpeta **Vídeos** del usuario).
 
 ## Requisitos

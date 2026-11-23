@@ -145,7 +145,7 @@ public sealed partial class MainWindow : Window
             bool audio = AudioCheck.IsChecked == true;
 
             Directory.CreateDirectory(_outputFolder);
-            _currentFile = Path.Combine(_outputFolder, $"Gravacao_{DateTime.Now:yyyyMMdd_HHmmss}.mp4");
+            _currentFile = Path.Combine(_outputFolder, $"Grabacion_{DateTime.Now:yyyyMMdd_HHmmss}.mp4");
 
             _recorder = new ScreenRecorder();
             _recorder.Start(_currentFile, fps, monitor, audio);
