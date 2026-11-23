@@ -51,6 +51,11 @@ selftest*.log
 selftest*.mp4
 *.mp4
 
+# ----- Instalador generado (se publica como release, no en git) -----
+dist/
+*.wixpdb
+*.cab
+
 # ----- SO -----
 Thumbs.db
 desktop.ini

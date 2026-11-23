@@ -84,6 +84,20 @@ Se guarda al cerrar la app en:
 Incluye: posición y tamaño de la ventana, monitor, FPS, audio y carpeta. Si el
 monitor guardado ya no existe, la app cae al primero automáticamente.
 
+## Instalador (MSI)
+
+Descarga el instalador desde la [página de releases](https://github.com/DarielVerdecia93/grabador-de-pantalla/releases) y ejecútalo. Instala la app (con .NET incluido, no necesitas instalar nada más) y crea accesos directos en el menú inicio y el escritorio.
+
+Para generar el MSI tú mismo necesitas WiX v6:
+
+```
+dotnet tool install --global wix --version 6.0.1
+wix extension add -g WixToolset.UI.wixext/6.0.1
+pwsh installer\build-msi.ps1
+```
+
+El `.msi` queda en `dist\`. Es *self-contained*: un solo archivo con la app y el runtime.
+
 ## Estructura del proyecto
 
 | Archivo | Responsabilidad |
@@ -93,6 +107,8 @@ monitor guardado ya no existe, la app cae al primero automáticamente.
 | `DisplayInfo.cs` | Enumera los monitores conectados. |
 | `FfmpegLocator.cs` | Encuentra `ffmpeg.exe` y elige el encoder (GPU o CPU). |
 | `Settings.cs` | Guarda y lee la posición de la ventana y las opciones. |
+| `installer\Product.wxs` | Definición del instalador MSI (WiX v6). |
+| `installer\build-msi.ps1` | Script que publica y genera el MSI. |
 | `MainWindow.xaml(.cs)` | Interfaz: Mica, monitor, FPS, audio, carpeta, Grabar/Parar. |
 | `App.xaml(.cs)` | Arranque de la app. |
 | `Assets\app.ico` | Icono de la app (generado por `Assets\make_icon.ps1`). |
