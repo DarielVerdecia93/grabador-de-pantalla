@@ -1,0 +1,57 @@
+# ----- .NET / build -----
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Ll]og/
+[Ll]ogs/
+
+# Archivos de resultado de compilacion
+*.dll
+*.exe
+*.pdb
+*.cache
+*.user
+*.suo
+*.userprefs
+
+# ----- Visual Studio / Rider -----
+.vs/
+.idea/
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+
+# ----- NuGet -----
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ----- WinUI 3 / MSIX -----
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+AppPackages/
+BundleArtifacts/
+*.pfx
+GeneratedArtifacts/
+_pkginfo.txt
+
+# ----- Salida propia de la app / pruebas -----
+selftest*.log
+selftest*.mp4
+*.mp4
+
+# ----- SO -----
+Thumbs.db
+desktop.ini
+.DS_Store
