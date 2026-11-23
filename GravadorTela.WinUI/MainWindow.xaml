@@ -11,69 +11,101 @@
         </Grid.RowDefinitions>
 
         <!-- Barra de titulo personalizada (estilo Windows 11) -->
-        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Padding="14,0,0,0">
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="44" Padding="16,0,0,0">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="13"
-                       Text="Grabador de Pantalla" />
+            <Border Grid.Column="0" Width="18" Height="18" CornerRadius="9"
+                    Background="#E23B3B" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0"
+                       FontSize="13" FontWeight="SemiBold" Text="Grabador de Pantalla" />
         </Grid>
 
-        <Grid Grid.Row="1" Padding="24,8,24,24" RowSpacing="12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <!-- Tarjeta central -->
+        <Border Grid.Row="1" Margin="20,4,20,20" Padding="22"
+                CornerRadius="12"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid RowSpacing="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-        <!-- Monitor -->
-        <Grid Grid.Row="0" ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Monitor:" VerticalAlignment="Center" />
-            <ComboBox x:Name="MonitorBox" Grid.Column="1" HorizontalAlignment="Stretch" />
-        </Grid>
+                <!-- Fila: Monitor + FPS -->
+                <Grid Grid.Row="0" ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Spacing="6">
+                        <TextBlock Text="Monitor" FontSize="12" Opacity="0.7" />
+                        <ComboBox x:Name="MonitorBox" HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="6">
+                        <TextBlock Text="FPS" FontSize="12" Opacity="0.7" />
+                        <ComboBox x:Name="FpsBox" SelectedIndex="1" MinWidth="90">
+                            <ComboBoxItem Content="24" />
+                            <ComboBoxItem Content="30" />
+                            <ComboBoxItem Content="60" />
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
 
-        <!-- FPS -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="FPS:" VerticalAlignment="Center" />
-                <ComboBox x:Name="FpsBox" SelectedIndex="1" MinWidth="90">
-                    <ComboBoxItem Content="24" />
-                    <ComboBoxItem Content="30" />
-                    <ComboBoxItem Content="60" />
-                </ComboBox>
-            </StackPanel>
-            <CheckBox x:Name="AudioCheck" Content="Grabar audio del sistema" VerticalAlignment="Center" />
-        </StackPanel>
+                <!-- Fila: Codificacion -->
+                <StackPanel Grid.Row="1" Spacing="6">
+                    <TextBlock Text="Codificación" FontSize="12" Opacity="0.7" />
+                    <ComboBox x:Name="EncoderBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+                        <ComboBoxItem Content="Automático (GPU si hay, si no CPU)" />
+                        <ComboBoxItem Content="Forzar GPU" />
+                        <ComboBoxItem Content="Forzar CPU" />
+                    </ComboBox>
+                </StackPanel>
 
-        <!-- Carpeta -->
-        <Grid Grid.Row="2" ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Carpeta:" VerticalAlignment="Center" />
-            <TextBox x:Name="FolderBox" Grid.Column="1" IsReadOnly="True" />
-            <Button x:Name="FolderButton" Grid.Column="2" Content="..." Click="OnPickFolder" />
-        </Grid>
+                <!-- Fila: Audio -->
+                <CheckBox x:Name="AudioCheck" Grid.Row="2" Content="Grabar audio del sistema" />
 
-        <StackPanel Grid.Row="3" VerticalAlignment="Center" Spacing="10">
-            <Button x:Name="RecordButton" Click="OnRecordClick"
-                    HorizontalAlignment="Stretch" Height="56" FontSize="18"
-                    Content="● Grabar" />
-            <TextBlock x:Name="EncoderLabel" Text="" HorizontalAlignment="Center"
-                       Foreground="{ThemeResource SystemAccentColor}" />
-        </StackPanel>
+                <!-- Fila: Carpeta -->
+                <StackPanel Grid.Row="3" Spacing="6">
+                    <TextBlock Text="Carpeta de salida" FontSize="12" Opacity="0.7" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="FolderBox" Grid.Column="0" IsReadOnly="True" />
+                        <Button x:Name="FolderButton" Grid.Column="1" Content="Examinar…" Click="OnPickFolder" />
+                    </Grid>
+                </StackPanel>
 
-        <TextBlock x:Name="StatusLabel" Grid.Row="4" Text="Listo"
-                   HorizontalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" />
-        </Grid>
+                <!-- Boton grabar + estado encoder -->
+                <StackPanel Grid.Row="4" VerticalAlignment="Center" Spacing="10">
+                    <Button x:Name="RecordButton" Click="OnRecordClick"
+                            HorizontalAlignment="Stretch" Height="60" FontSize="18" FontWeight="SemiBold"
+                            CornerRadius="10" Foreground="White" Background="#E23B3B">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border x:Name="RecDot" Width="14" Height="14" CornerRadius="7" Background="White" />
+                            <TextBlock x:Name="RecText" Text="Grabar" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock x:Name="EncoderLabel" Text="" HorizontalAlignment="Center"
+                               FontSize="12" Foreground="{ThemeResource SystemAccentColor}" />
+                </StackPanel>
+
+                <!-- Estado -->
+                <Border Grid.Row="5" Padding="12,8" CornerRadius="8"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}">
+                    <TextBlock x:Name="StatusLabel" Text="Listo para grabar"
+                               HorizontalAlignment="Center" Opacity="0.8" TextWrapping="Wrap" />
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

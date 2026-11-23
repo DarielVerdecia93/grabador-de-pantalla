@@ -1,8 +1,8 @@
 using System.IO;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Composition.SystemBackdrops;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 
@@ -33,7 +33,6 @@ public sealed partial class MainWindow : Window
         LoadMonitors();
         ApplySavedOptions();
 
-        // Guarda al cerrar la ventana.
         AppWindow.Closing += (_, _) => SaveSettings();
     }
 
@@ -43,8 +42,8 @@ public sealed partial class MainWindow : Window
 
     private void RestoreWindowPosition()
     {
-        var w = _settings.WinWidth ?? 440;
-        var h = _settings.WinHeight ?? 420;
+        var w = _settings.WinWidth ?? 460;
+        var h = _settings.WinHeight ?? 560;
         AppWin.Resize(new Windows.Graphics.SizeInt32(w, h));
         if (_settings.WinX is int x && _settings.WinY is int y)
             AppWin.Move(new Windows.Graphics.PointInt32(x, y));
@@ -65,10 +64,9 @@ public sealed partial class MainWindow : Window
         if (_settings.MonitorIndex >= 0 && _settings.MonitorIndex < MonitorBox.Items.Count)
             MonitorBox.SelectedIndex = _settings.MonitorIndex;
 
-        int fpsIdx = _settings.Fps switch { 24 => 0, 60 => 2, _ => 1 };
-        FpsBox.SelectedIndex = fpsIdx;
-
+        FpsBox.SelectedIndex = _settings.Fps switch { 24 => 0, 60 => 2, _ => 1 };
         AudioCheck.IsChecked = _settings.CaptureAudio;
+        EncoderBox.SelectedIndex = (int)_settings.EncoderMode is >= 0 and <= 2 ? (int)_settings.EncoderMode : 0;
     }
 
     private void SaveSettings()
@@ -85,6 +83,7 @@ public sealed partial class MainWindow : Window
             _settings.Fps = int.Parse((string)((ComboBoxItem)FpsBox.SelectedItem).Content);
             _settings.CaptureAudio = AudioCheck.IsChecked == true;
             _settings.OutputFolder = _outputFolder;
+            _settings.EncoderMode = (EncoderMode)EncoderBox.SelectedIndex;
             _settings.Save();
         }
         catch { }
@@ -93,11 +92,9 @@ public sealed partial class MainWindow : Window
     /// <summary>Fondo Mica + barra de titulo extendida, estilo Windows 11.</summary>
     private void SetupModernTitleBar()
     {
-        // Fondo Mica (toma el color del escritorio y el tema).
         if (MicaController.IsSupported())
             SystemBackdrop = new MicaBackdrop();
 
-        // El contenido sube hasta la barra; usamos nuestra franja como barra de titulo.
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
     }
@@ -108,7 +105,6 @@ public sealed partial class MainWindow : Window
         MonitorBox.Items.Clear();
         foreach (var d in _displays)
             MonitorBox.Items.Add(d.Display);
-        // La seleccion la decide ApplySavedOptions (o queda en 0 por defecto).
         if (MonitorBox.Items.Count > 0 && MonitorBox.SelectedIndex < 0)
             MonitorBox.SelectedIndex = 0;
     }
@@ -118,7 +114,6 @@ public sealed partial class MainWindow : Window
         var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.VideosLibrary };
         picker.FileTypeFilter.Add("*");
 
-        // En WinUI 3 unpackaged hay que asociar el picker al HWND de la ventana.
         var hwnd = WindowNative.GetWindowHandle(this);
         InitializeWithWindow.Initialize(picker, hwnd);
 
@@ -143,17 +138,18 @@ public sealed partial class MainWindow : Window
             int fps = int.Parse((string)((ComboBoxItem)FpsBox.SelectedItem).Content);
             int monitor = MonitorBox.SelectedIndex >= 0 ? _displays[MonitorBox.SelectedIndex].Index : 0;
             bool audio = AudioCheck.IsChecked == true;
+            var mode = (EncoderMode)EncoderBox.SelectedIndex;
 
             Directory.CreateDirectory(_outputFolder);
             _currentFile = Path.Combine(_outputFolder, $"Grabacion_{DateTime.Now:yyyyMMdd_HHmmss}.mp4");
 
             _recorder = new ScreenRecorder();
-            _recorder.Start(_currentFile, fps, monitor, audio);
+            _recorder.Start(_currentFile, fps, monitor, audio, mode);
 
             _isRecording = true;
-            RecordButton.Content = "■ Parar";
-            EncoderLabel.Text = $"Encoder: {_recorder.EncoderName}";
-            StatusLabel.Text = "Grabando...";
+            SetRecordingVisual(true);
+            EncoderLabel.Text = $"Codificando con: {_recorder.EncoderName}";
+            StatusLabel.Text = "Grabando…";
             SetOptionsEnabled(false);
         }
         catch (Exception ex)
@@ -172,8 +168,8 @@ public sealed partial class MainWindow : Window
             var frames = _recorder?.FramesWritten ?? 0;
             _recorder = null;
             StatusLabel.Text = err != null
-                ? $"Guardado con avisos ({frames} frames): {err}"
-                : $"Guardado: {Path.GetFileName(_currentFile)} ({frames} frames)";
+                ? $"Guardado con avisos ({frames} fotogramas): {err}"
+                : $"Guardado: {Path.GetFileName(_currentFile)} ({frames} fotogramas)";
         }
         catch (Exception ex)
         {
@@ -182,9 +178,20 @@ public sealed partial class MainWindow : Window
         finally
         {
             _isRecording = false;
-            RecordButton.Content = "● Grabar";
+            SetRecordingVisual(false);
             SetOptionsEnabled(true);
         }
+    }
+
+    /// <summary>Cambia el boton entre "Grabar" (punto) y "Parar" (cuadrado).</summary>
+    private void SetRecordingVisual(bool recording)
+    {
+        RecText.Text = recording ? "Parar" : "Grabar";
+        RecDot.CornerRadius = new CornerRadius(recording ? 2 : 7);
+        RecordButton.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+            recording
+                ? Windows.UI.Color.FromArgb(255, 90, 90, 96)
+                : Windows.UI.Color.FromArgb(255, 226, 59, 59));
     }
 
     private void SetOptionsEnabled(bool on)
@@ -193,6 +200,7 @@ public sealed partial class MainWindow : Window
         MonitorBox.IsEnabled = on;
         FolderButton.IsEnabled = on;
         AudioCheck.IsEnabled = on;
+        EncoderBox.IsEnabled = on;
     }
 
     private void CleanupAfterError()
@@ -200,7 +208,7 @@ public sealed partial class MainWindow : Window
         _recorder?.Dispose();
         _recorder = null;
         _isRecording = false;
-        RecordButton.Content = "● Grabar";
+        SetRecordingVisual(false);
         SetOptionsEnabled(true);
     }
 }

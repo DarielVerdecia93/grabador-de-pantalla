@@ -43,10 +43,12 @@ public sealed class ScreenRecorder : IDisposable
 
     private const int DXGI_ERROR_WAIT_TIMEOUT = unchecked((int)0x887A0027);
 
-    public void Start(string outputPath, int fps = 30, int monitorIndex = 0, bool captureAudio = false)
+    public void Start(string outputPath, int fps = 30, int monitorIndex = 0, bool captureAudio = false,
+        EncoderMode encoderMode = EncoderMode.Auto)
     {
         _fps = fps;
         _captureAudio = captureAudio;
+        _encoderMode = encoderMode;
         CreateCapture(monitorIndex);
         if (_captureAudio) SetupAudio();
         StartFfmpeg(outputPath);
@@ -56,6 +58,8 @@ public sealed class ScreenRecorder : IDisposable
         _thread = new Thread(CaptureLoop) { IsBackground = true, Name = "Captura" };
         _thread.Start();
     }
+
+    private EncoderMode _encoderMode = EncoderMode.Auto;
 
     // Formato de audio detectado del mezclador WASAPI (para pasarlo a FFmpeg).
     private int _audioRate, _audioChannels, _audioBits;
@@ -154,7 +158,7 @@ public sealed class ScreenRecorder : IDisposable
             ?? throw new InvalidOperationException(
                 "No se encontro ffmpeg.exe. Instalalo con: winget install Gyan.FFmpeg");
 
-        var (codec, label) = FfmpegLocator.PickEncoder(ffmpeg, GpuName);
+        var (codec, label) = FfmpegLocator.PickEncoder(ffmpeg, GpuName, _encoderMode);
         EncoderName = label;
         UsingHardwareEncoder = codec != "libx264";
 

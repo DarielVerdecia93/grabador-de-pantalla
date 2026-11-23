@@ -3,6 +3,14 @@ using System.IO;
 
 namespace GravadorTela;
 
+/// <summary>Modo de codificacion elegido por el usuario.</summary>
+public enum EncoderMode
+{
+    Auto,       // GPU si existe, si no CPU
+    ForceGpu,   // forzar GPU (si no hay, cae a CPU con aviso)
+    ForceCpu    // forzar CPU (libx264)
+}
+
 /// <summary>Encuentra ffmpeg.exe y decide el encoder segun la GPU disponible.</summary>
 internal static class FfmpegLocator
 {
@@ -35,31 +43,38 @@ internal static class FfmpegLocator
     }
 
     /// <summary>
-    /// Elige el encoder de FFmpeg: GPU si existe (AMD AMF / NVIDIA NVENC / Intel QSV),
-    /// con fallback a CPU (libx264). Devuelve (codec, nombreLegible).
+    /// Elige el encoder de FFmpeg segun el modo pedido.
+    /// Auto/ForceGpu: GPU si existe (AMD AMF / NVIDIA NVENC / Intel QSV);
+    /// ForceCpu o sin GPU: CPU (libx264). Devuelve (codec, nombreLegible).
     /// </summary>
-    public static (string codec, string label) PickEncoder(string ffmpeg, string gpuName)
+    public static (string codec, string label) PickEncoder(string ffmpeg, string gpuName, EncoderMode mode = EncoderMode.Auto)
     {
         var available = ListEncoders(ffmpeg);
-
         bool Has(string c) => available.Contains(c);
 
+        if (mode == EncoderMode.ForceCpu)
+            return ("libx264", "Software (CPU) — forzado");
+
+        // Elegir la GPU segun el fabricante.
+        (string codec, string label)? gpu = null;
         if ((gpuName.Contains("AMD", StringComparison.OrdinalIgnoreCase) ||
              gpuName.Contains("Radeon", StringComparison.OrdinalIgnoreCase)) && Has("h264_amf"))
-            return ("h264_amf", "AMD AMF (GPU)");
+            gpu = ("h264_amf", "AMD AMF (GPU)");
+        else if (gpuName.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) && Has("h264_nvenc"))
+            gpu = ("h264_nvenc", "NVIDIA NVENC (GPU)");
+        else if (gpuName.Contains("Intel", StringComparison.OrdinalIgnoreCase) && Has("h264_qsv"))
+            gpu = ("h264_qsv", "Intel QSV (GPU)");
+        else if (Has("h264_amf")) gpu = ("h264_amf", "AMD AMF (GPU)");
+        else if (Has("h264_nvenc")) gpu = ("h264_nvenc", "NVIDIA NVENC (GPU)");
+        else if (Has("h264_qsv")) gpu = ("h264_qsv", "Intel QSV (GPU)");
 
-        if (gpuName.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) && Has("h264_nvenc"))
-            return ("h264_nvenc", "NVIDIA NVENC (GPU)");
+        if (gpu is { } g)
+            return mode == EncoderMode.ForceGpu ? (g.codec, g.label + " — forzado") : g;
 
-        if (gpuName.Contains("Intel", StringComparison.OrdinalIgnoreCase) && Has("h264_qsv"))
-            return ("h264_qsv", "Intel QSV (GPU)");
-
-        // Cualquier GPU que exponga AMF aunque el nombre no cuadre
-        if (Has("h264_amf")) return ("h264_amf", "AMD AMF (GPU)");
-        if (Has("h264_nvenc")) return ("h264_nvenc", "NVIDIA NVENC (GPU)");
-        if (Has("h264_qsv")) return ("h264_qsv", "Intel QSV (GPU)");
-
-        return ("libx264", "Software (CPU)");
+        // No hay GPU disponible.
+        return mode == EncoderMode.ForceGpu
+            ? ("libx264", "Software (CPU) — sin GPU compatible")
+            : ("libx264", "Software (CPU)");
     }
 
     private static HashSet<string> ListEncoders(string ffmpeg)

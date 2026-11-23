@@ -20,6 +20,7 @@ public sealed class Settings
     public int Fps { get; set; } = 30;
     public bool CaptureAudio { get; set; }
     public string? OutputFolder { get; set; }
+    public EncoderMode EncoderMode { get; set; } = EncoderMode.Auto;
 
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
 
